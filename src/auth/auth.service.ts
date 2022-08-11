@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { Account } from './account.entity';
@@ -60,11 +60,11 @@ export class AuthService {
             .getOne();
             
             // Check existed user
-            if(!user) return "Credentials incorrect";
+            if(!user) return new UnauthorizedException("Credentials incorrect");
 
             // Check correct password
             const isCorrectPassword : boolean = await this.verifyPassword(dto.password, user["password"]);
-            if(!isCorrectPassword) return 'Credentials incorrect';
+            if(!isCorrectPassword) return new UnauthorizedException("Credentials incorrect");
 
             // Correct user
             return this.signToken(user["id"], dto.email);
@@ -83,7 +83,7 @@ export class AuthService {
         const secret = this.config.get('JWT_SECRET');
         const refreshSecret = this.config.get('JWT_RF_SECRET');
         const token = await this.jwt.signAsync(payload, {
-            expiresIn: '15m',
+            expiresIn: '60s',
             secret: secret
         });
 

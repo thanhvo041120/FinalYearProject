@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Post, Put } from '@nestjs/common';
-import { UserDto } from './dtos';
+import { Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { JwtGuard } from 'src/auth/guards';
 import { UpdateUserDto } from './dtos/updateuser.dto';
 import { UserService } from './user.service';
 
@@ -9,6 +9,7 @@ export class UserController {
         private userService: UserService
     ){}
 
+    @UseGuards(JwtGuard)
     @Get()
     async getUsers(){
         const response = await this.userService.findUsers();
@@ -18,6 +19,7 @@ export class UserController {
         }
     }
     
+    @UseGuards(JwtGuard)
     @Get('search/name/:username')
     async getUsersByName(@Param('username') username : string){
         const response = await this.userService.findUsersByName(username);
