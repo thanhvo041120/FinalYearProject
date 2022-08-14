@@ -1,4 +1,4 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { Account } from './account.entity';
@@ -75,6 +75,25 @@ export class AuthService {
     }
 
 
+    public async refreshToken(email:string, refreshToken:string){
+        console.log("🚀 ~ file: auth.service.ts ~ line 79 ~ AuthService ~ refreshToken ~ email", email)
+        console.log("🚀 ~ file: auth.service.ts ~ line 79 ~ AuthService ~ refreshToken ~ refreshToken", refreshToken)
+        try {
+            const user: object = await this.accountRepository
+            .createQueryBuilder('Account')
+            .where("Account.email = :enteredEmail",{enteredEmail: email})
+            .getOne();
+            
+            // Check existed user
+            if(!user) return new ForbiddenException("Access Denied");
+
+            
+        } catch (error) {
+        console.log("🚀 ~ file: auth.service.ts ~ line 82 ~ AuthService ~ refreshToken ~ error", error)
+            
+        }
+    }
+    
     private async signToken(userId: number, email: string): Promise<{access_token: string, refresh_token: string}>{
         const payload = {
             sub: userId,
