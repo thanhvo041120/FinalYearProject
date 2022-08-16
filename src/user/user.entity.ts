@@ -1,4 +1,4 @@
-import { Account } from "src/auth/account.entity";
+import { Account } from "src/auth/entities";
 import { CoreEntity } from "src/database/inherited.entity";
 import { Column, Entity, OneToMany } from "typeorm";
 
