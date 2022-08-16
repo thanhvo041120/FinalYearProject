@@ -1,17 +1,21 @@
 import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
-import { Account } from './account.entity';
+import { Account } from './entities';
 import { AuthDto, RegisterDto } from './dtos';
 import * as argon from 'argon2';
 import { UserService } from 'src/user/user.service';
 import { JwtService } from '@nestjs/jwt';
+import { RefreshToken } from './entities';
+import { IToken } from './interfaces';
 
 @Injectable()
 export class AuthService {
     constructor(
         @Inject('AUTH_REPOSITORY')
         private accountRepository : Repository<Account>,
+        @Inject('TOKEN_REPOSITORY')
+        private tokenRepository : Repository<RefreshToken>,
         private config : ConfigService,
         private userService : UserService,
         private jwt : JwtService
@@ -19,39 +23,34 @@ export class AuthService {
 
     public async register(dto: RegisterDto): Promise<any>{
         try {
-            try {
-                const hashedPassword = await argon.hash(dto.password);
-                // create an user object
-                const user = new Account();
-                // add new email and password to object
-                user.email = dto.email;
-                user.password = hashedPassword;
-    
-                // delete redundant data out of dto
-                delete(dto.email);
-                delete(dto.password);
-    
-                // add new user
-                const addUserData = await this.userService.createUser(dto);
-                
-                if(addUserData["data"] === "User's phonenumber is existed") return addUserData["data"];
-                // add userid to user object
-                user.user = addUserData["data"];
-                const addedUser = await this.accountRepository.save(user);
-                
-                delete(addedUser.password);
-                return addedUser;
-            } catch (error) {
-            console.log("🚀 ~ file: auth.service.ts ~ line 23 ~ AuthService ~ registerService ~ error", error);
-            }
-        } catch (error) {
-        console.log("🚀 ~ file: auth.service.ts ~ line 18 ~ AuthService ~ register ~ error", error);
+            const hashedPassword = await argon.hash(dto.password);
+            // create an user object
+            const user = new Account();
+            // add new email and password to object
+            user.email = dto.email;
+            user.password = hashedPassword;
+
+            // delete redundant data out of dto
+            delete(dto.email);
+            delete(dto.password);
+
+            // add new user
+            const addUserData = await this.userService.createUser(dto);
             
+            if(addUserData["data"] === "User's phonenumber is existed") return addUserData["data"];
+            // add userid to user object
+            user.user = addUserData["data"];
+            const addedUser = await this.accountRepository.save(user);
+            
+            delete(addedUser.password);
+            return addedUser;
+        } catch (error) {
+            return error.message
         }
     }
 
 
-    public async login(dto: AuthDto):Promise<any>{
+    public async login(dto: AuthDto):Promise<IToken|object>{
         try {
             // Get user's account from account table
             const user: object = await this.accountRepository
@@ -67,36 +66,45 @@ export class AuthService {
             if(!isCorrectPassword) return new UnauthorizedException("Credentials incorrect");
 
             // Correct user
-            return this.signToken(user["id"], dto.email);
+            const response = await this.signToken(user["id"], dto.email);
+
+            await this.setRefreshToken(user["id"], response.refresh_token);
+            return response;
         } catch (error) {
-        console.log("🚀 ~ file: auth.service.ts ~ line 58 ~ AuthService ~ login ~ error", error)
-            
+            return error.message;
         }
     }
 
 
-    public async refreshToken(email:string, refreshToken:string){
-        console.log("🚀 ~ file: auth.service.ts ~ line 79 ~ AuthService ~ refreshToken ~ email", email)
-        console.log("🚀 ~ file: auth.service.ts ~ line 79 ~ AuthService ~ refreshToken ~ refreshToken", refreshToken)
+    public async refreshToken(email:string, refreshToken:string): Promise<IToken|object>{
         try {
-            const user: object = await this.accountRepository
+            const account: object = await this.accountRepository
             .createQueryBuilder('Account')
             .where("Account.email = :enteredEmail",{enteredEmail: email})
             .getOne();
             
-            // Check existed user
-            if(!user) return new ForbiddenException("Access Denied");
-
+            // Check existed account
+            if(!account) return new ForbiddenException("Access Denied");
+            
+            const existedToken = await this.tokenRepository.createQueryBuilder('refreshToken')
+            .where('refreshToken.accountId = :accountId', {accountId: account['id']})
+            .getOne();
+            
+            if(!(refreshToken ===existedToken.token)) {
+                return new ForbiddenException('Access Denied')
+            }
+            const response: IToken = await this.signToken(account['id'], email);
+            await this.updateRFToken(account['id'],response.refresh_token);
+            return response;
             
         } catch (error) {
-        console.log("🚀 ~ file: auth.service.ts ~ line 82 ~ AuthService ~ refreshToken ~ error", error)
-            
+            return error.message;
         }
     }
     
-    private async signToken(userId: number, email: string): Promise<{access_token: string, refresh_token: string}>{
+    private async signToken(accountId: number, email: string): Promise<IToken>{
         const payload = {
-            sub: userId,
+            sub: accountId,
             email
         }
         const secret = this.config.get('JWT_SECRET');
@@ -110,12 +118,58 @@ export class AuthService {
             expiresIn: '12d',
             secret: refreshSecret
         })
+
         return {
             access_token: token,
             refresh_token: refreshToken,
         };
     }
 
+    
+    private async setRefreshToken(accountId: number, refreshToken: string):Promise<number>{
+        /*
+        This private function aim to set refresh token to a table in database
+        +>  return value equal to 1 when the token is updated or saved to the database 
+        =>  return value equal to 0 when the token is existed in the database
+        */
+
+        const existedAccountInDBTable = await this.tokenRepository.createQueryBuilder('refreshToken')
+        .where('refreshToken.accountId = :accountId', {accountId: accountId})
+        .getOne();
+
+        if(!existedAccountInDBTable){
+            await this.tokenRepository.createQueryBuilder()
+            .insert()
+            .into(RefreshToken)
+            .values({
+                token: refreshToken,
+                account: accountId
+            })
+            .execute();
+            return 1;
+        }
+                
+        if(!(refreshToken ===existedAccountInDBTable.token)){
+            await this.updateRFToken(accountId, refreshToken);
+            return 1;
+        }
+
+        return 0;
+    }
+
+    private async updateRFToken(accountId: number, refreshToken: string): Promise<void>{
+        /*
+        This private function aim to update refresh token to a table in database
+        */
+        await this.tokenRepository.createQueryBuilder()
+        .update(RefreshToken)
+        .set({
+            token: refreshToken,
+            account: accountId,
+        })
+        .where("account = :accountId", {accountId: accountId})
+        .execute();
+    }
     private async verifyPassword (enteredPassword, storedPassword):Promise<boolean>{
         const isCorrectPassword = await argon.verify(
             storedPassword,
