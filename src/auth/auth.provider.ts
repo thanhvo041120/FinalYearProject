@@ -7,10 +7,7 @@ export const authProviders = [
         provide: 'AUTH_REPOSITORY',
         useFactory: (dataSource: DataSource) => dataSource.getRepository(Account),
         inject: ['DATA_SOURCE']
-    }
-]
-
-export const refreshTokenProviders = [
+    },
     {
         provide: 'TOKEN_REPOSITORY',
         useFactory: (dataSource: DataSource) => dataSource.getRepository(RefreshToken),
