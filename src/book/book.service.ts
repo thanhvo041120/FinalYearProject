@@ -100,7 +100,6 @@ export class BookService {
     }
 
     public async getBookById(bookId: number): Promise<object>{
-        console.log("🚀 ~ file: book.service.ts ~ line 103 ~ BookService ~ getBookById ~ bookId", typeof bookId)
         try {
             const response = await this.bookRepository.createQueryBuilder('book')
             .where('book.id = :bookId', {bookId: bookId})
@@ -116,6 +115,25 @@ export class BookService {
             }
         } catch (error) {
             throw new InternalServerErrorException(error.message);
+        }
+    }
+
+    public async deleteBook(bookId: number): Promise<object>{
+        try {
+            const response = await this.bookRepository.createQueryBuilder('book')
+            .delete()
+            .from(Book)
+            .where("book.id = :bookId", {bookId: bookId})
+            .execute();
+
+
+            return{
+                message: 'success',
+                data: response.affected,
+                status: HttpStatus.OK,
+            }
+        } catch (error) {
+            throw new InternalServerErrorException(error.message)
         }
     }
 }

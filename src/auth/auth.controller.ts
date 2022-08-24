@@ -7,12 +7,14 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { AuthDto, RegisterDto } from './dtos';
 import { JwtRefreshGuard } from './guards';
 import { IToken } from './interfaces';
 
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}

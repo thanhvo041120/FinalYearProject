@@ -1,8 +1,10 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from 'src/auth/guards';
 import { UpdateUserDto } from './dtos/updateuser.dto';
 import { UserService } from './user.service';
 
+@ApiTags('User')
 @Controller('users')
 export class UserController {
     constructor(
