@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { BookService } from './book.service';
 import { CreateBookDto, UpdateBookDto } from './dtos';
 
+@ApiTags('Book')
 @Controller('book')
 export class BookController {
     constructor(
@@ -31,5 +33,10 @@ export class BookController {
     @Get('bookById/:bookId')
     getBookById(@Param('bookId', ParseIntPipe) bookId: number): object{
         return this.bookService.getBookById(bookId);
+    }
+
+    @Delete('delete/:bookId')
+    deleteBook(@Param('bookId', ParseIntPipe) bookId: number): object{
+        return this.bookService.deleteBook(bookId);
     }
 }

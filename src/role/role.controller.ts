@@ -1,7 +1,9 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Patch, Post, Put } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { RoleDto, UpdateRoleDto } from './dtos';
 import { RoleService } from './role.service';
 
+@ApiTags('Role')
 @Controller('roles')
 export class RoleController {
     constructor(
