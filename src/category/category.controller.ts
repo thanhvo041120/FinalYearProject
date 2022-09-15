@@ -1,8 +1,8 @@
 import { BadRequestException, Body, ConflictException, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { CreateCategoryDto } from 'src/utils/dtos/categories/addCategoryDtos';
+import { UpdateCategoryDto } from 'src/utils/dtos/categories/updateCategoryDtos';
 import { CategoryService } from './category.service';
-import { CreateCategoryDto } from './dtos';
-import { UpdateCategoryDto } from './dtos/update-category.dto';
 
 @ApiTags('Category')
 @Controller('category')

@@ -2,19 +2,21 @@ import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { Account } from './entities';
-import { AuthDto, RegisterDto } from './dtos';
 import * as argon from 'argon2';
 import { UserService } from 'src/user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshToken } from './entities';
 import { IToken } from './interfaces';
+import { RegisterDto } from 'src/utils/dtos/authentication/registerDtos';
+import { AuthDto } from 'src/utils/dtos/authentication/authDtos';
+import { Repositoties } from 'src/utils/constants';
 
 @Injectable()
 export class AuthService {
     constructor(
-        @Inject('AUTH_REPOSITORY')
+        @Inject(Repositoties.AUTH)
         private accountRepository : Repository<Account>,
-        @Inject('TOKEN_REPOSITORY')
+        @Inject(Repositoties.TOKEN)
         private tokenRepository : Repository<RefreshToken>,
         private config : ConfigService,
         private userService : UserService,

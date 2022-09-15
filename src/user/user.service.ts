@@ -1,7 +1,7 @@
 import { Body, Inject, Injectable } from '@nestjs/common';
+import { CreateUserDto } from 'src/utils/dtos/users/addUserDtos';
+import { UpdateUserDto } from 'src/utils/dtos/users/updateUserDtos';
 import { Repository } from 'typeorm';
-import { UserDto } from './dtos';
-import { UpdateUserDto } from './dtos/updateuser.dto';
 import { IUser } from './interfaces/user.interface';
 import { User } from './user.entity';
 
@@ -12,7 +12,7 @@ export class UserService {
         private userRepository : Repository<User>
     ){}
 
-    public async createUser(dto: UserDto){
+    public async createUser(dto: CreateUserDto){
         try {
             let response:object = {}
             const findExistUser = await this.findUserByPhoneNumber(dto.phonenumber);

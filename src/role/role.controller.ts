@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Patch, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { RoleDto, UpdateRoleDto } from './dtos';
+import { CreateRoleDto } from 'src/utils/dtos/roles/addRoleDtos';
+import { UpdateRoleDto } from 'src/utils/dtos/roles/updateRoleDtos';
 import { RoleService } from './role.service';
 
 @ApiTags('Role')
@@ -11,7 +12,7 @@ export class RoleController {
     ){}
 
     @Post('create')
-    async create(@Body() dto: RoleDto){
+    async create(@Body() dto: CreateRoleDto){
         const response = await this.roleService.createRole(dto);
         if(response === 'Existed') return new HttpException(response, HttpStatus.CONFLICT)
         return {
