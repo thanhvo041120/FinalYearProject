@@ -1,12 +1,14 @@
 import { HttpStatus, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Repositoties } from 'src/utils/constants';
+import { CreateBookDto } from 'src/utils/dtos/books/addBookDtos';
+import { UpdateBookDto } from 'src/utils/dtos/books/updateBookDtos';
 import { Repository } from 'typeorm';
-import { CreateBookDto, UpdateBookDto } from './dtos';
 import { Book } from './entities';
 
 @Injectable()
 export class BookService {
     constructor(
-        @Inject('BOOK_REPOSITORY')
+        @Inject(Repositoties.BOOK)
         private readonly bookRepository: Repository<Book>
     ){}
 

@@ -1,10 +1,11 @@
+import { Databases, Repositoties } from "src/utils/constants";
 import { DataSource } from "typeorm";
 import { Book } from "./entities";
 
 export const bookProviders = [
     {
-        provide: 'BOOK_REPOSITORY',
+        provide: Repositoties.BOOK,
         useFactory: (dataSource:DataSource)=> dataSource.getRepository(Book),
-        inject: ['DATA_SOURCE']
+        inject: [Databases.STORE]
     }
 ]

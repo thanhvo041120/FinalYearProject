@@ -1,16 +1,17 @@
+import { Databases, Repositoties } from "src/utils/constants";
 import { DataSource } from "typeorm";
 import { Account } from "./entities";
 import { RefreshToken } from "./entities";
 
 export const authProviders = [
     {
-        provide: 'AUTH_REPOSITORY',
+        provide: Repositoties.AUTH,
         useFactory: (dataSource: DataSource) => dataSource.getRepository(Account),
-        inject: ['DATA_SOURCE']
+        inject: [Databases.STORE]
     },
     {
-        provide: 'TOKEN_REPOSITORY',
+        provide: Repositoties.TOKEN,
         useFactory: (dataSource: DataSource) => dataSource.getRepository(RefreshToken),
-        inject: ['DATA_SOURCE']
+        inject: [Databases.STORE]
     }
 ]

@@ -1,14 +1,15 @@
 import { ConflictException, HttpStatus, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Repositoties } from 'src/utils/constants';
+import { CreateCategoryDto } from 'src/utils/dtos/categories/addCategoryDtos';
+import { UpdateCategoryDto } from 'src/utils/dtos/categories/updateCategoryDtos';
 import { Repository } from 'typeorm';
-import { CreateCategoryDto } from './dtos';
-import { UpdateCategoryDto } from './dtos/update-category.dto';
 import { Category } from './entities';
 import { ICategory, ICategoryName } from './interfaces';
 
 @Injectable()
 export class CategoryService {
     constructor(
-        @Inject('CATEGORY_REPOSITORY')
+        @Inject(Repositoties.CATEGORY)
         private readonly categoryRepository: Repository<Category>,
     ){}
 

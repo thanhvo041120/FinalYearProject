@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from 'src/auth/guards';
-import { UpdateUserDto } from './dtos/updateuser.dto';
+import { UpdateUserDto } from 'src/utils/dtos/users/updateUserDtos';
 import { UserService } from './user.service';
 
 @ApiTags('User')
@@ -33,7 +33,6 @@ export class UserController {
 
     @Get('search/phonenumber/:phonenumber')
     async getUserByPhoneNumber(@Param('phonenumber') phonenumber: string){
-        console.log("🚀 ~ file: user.controller.ts ~ line 41 ~ UserController ~ getUserByPhoneNumber ~ phonenumber", phonenumber)
         const response = await this.userService.findUserByPhoneNumber(phonenumber);
         return {
             data: response,

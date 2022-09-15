@@ -1,17 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { Repositoties } from 'src/utils/constants';
+import { CreateRoleDto } from 'src/utils/dtos/roles/addRoleDtos';
+import { UpdateRoleDto } from 'src/utils/dtos/roles/updateRoleDtos';
 import { Repository } from 'typeorm';
-import { RoleDto, UpdateRoleDto } from './dtos';
 import { IRole } from './interfaces';
 import { Role } from './role.entity';
 
 @Injectable()
 export class RoleService {
     constructor(
-        @Inject('ROLE_REPOSITORY')
+        @Inject(Repositoties.ROLE)
         private roleRepository: Repository<Role>,
     ){}
 
-    public async createRole(role: RoleDto){
+    public async createRole(role: CreateRoleDto){
         try {
             const findExistRole = await this.findRoleByName(role.name);
             if(!findExistRole){
