@@ -34,7 +34,7 @@ export class AuthController {
   async login(@Body() dto: AuthDto): Promise<IToken | object> {
     try {
       const response = await this.authService.login(dto);
-      return response;
+      // return response;
     } catch (error) {
       return new InternalServerErrorException('Internal Server Error');
     }

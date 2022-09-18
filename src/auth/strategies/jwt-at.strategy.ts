@@ -16,7 +16,6 @@ export class JwtAccessTokenStrategy extends PassportStrategy(Strategy, 'jwt-acce
     }
 
     async validate(payload : any){
-        console.log("🚀 ~ file: jwt-at.strategy.ts ~ line 19 ~ JwtAccessToken ~ validate ~ payload", payload)
         return payload;
     }
 }

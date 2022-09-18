@@ -71,7 +71,7 @@ export class AuthService {
             const response = await this.signToken(user["id"], dto.email);
 
             await this.setRefreshToken(user["id"], response.refresh_token);
-            return response;
+            // return response;
         } catch (error) {
             return error.message;
         }
