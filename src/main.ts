@@ -6,6 +6,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  app.enableCors();
   app.useGlobalPipes(new ValidationPipe());
   const config = new DocumentBuilder()
     .setTitle('Smart Library')
@@ -16,7 +17,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   const port = configService.get('PORT');
-  console.log("🚀 ~ file: main.ts ~ line 19 ~ bootstrap ~ port", port)
+  console.log('🚀 ~ file: main.ts ~ line 19 ~ bootstrap ~ port', port);
   await app.listen(port);
 }
 bootstrap();
