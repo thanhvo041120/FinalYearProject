@@ -1,0 +1,163 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  InternalServerErrorException,
+  NotFoundException,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
+import {
+  CreateBookDto,
+  CreateBookResponseDto,
+} from 'src/api/book/dtos/addBookDtos';
+import {
+  UpdateBookDto,
+  UpdateBookResponseDto,
+} from 'src/api/book/dtos/updateBookDtos';
+import { BookService } from './services/book.service';
+import { IBook } from './interfaces';
+import { BorrowDto, BorrowResponseDto } from './dtos/borrowBookDtos';
+import { AuthService } from '../auth/auth.service';
+import { BorrowBookService } from './services/borrow_book.service';
+import { IAccount } from '../auth/interfaces';
+import { HashDto, HashResponseDto } from './dtos/hashSADtos';
+import { BookToSaService } from './services/hash_book_SA.service';
+
+@ApiTags('Book')
+@Controller('book')
+export class BookController {
+  constructor(
+    private readonly bookService: BookService,
+    private readonly accountService: AuthService,
+    private readonly borrowService: BorrowBookService,
+    private readonly hashSAService: BookToSaService) {}
+
+  @Post('create')
+  async createBook(@Body() createDto: CreateBookDto, @Res() res: Response) {
+    try {
+      const response: CreateBookResponseDto = await this.bookService.createBook(
+        createDto,
+      );
+      return res.status(201).json({
+        data: response,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Patch('update/:bookId')
+  async updateBook(
+    @Body() updateDto: UpdateBookDto,
+    @Param('bookId', ParseIntPipe) bookId: number,
+    @Res() res: Response,
+  ) {
+    try {
+      const existedBook: IBook = await this.bookService.getBookById(bookId);
+      if (!existedBook) throw new NotFoundException('NOT FOUND');
+      const response: UpdateBookResponseDto = await this.bookService.updateBook(
+        bookId,
+        updateDto,
+        existedBook,
+      );
+
+      return res.status(200).json({
+        data: response,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Delete('delete/:bookId')
+  async deleteBook(
+    @Param('bookId', ParseIntPipe) bookId: number,
+    @Res() res: Response,
+  ) {
+    try {
+      const response = await this.bookService.deleteBook(bookId);
+      return res.status(200).json({
+        data: response,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Get('list')
+  async getBooks(@Res() res: Response) {
+    try {
+      const response = await this.bookService.getBooks();
+      return res.status(200).json({
+        data: response,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Get('booksByName')
+  async getBooksByName(
+    @Query('bookName') bookName: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const response: IBook[] = await this.bookService.getBooksByName(bookName);
+      return res.status(200).json({
+        message: 'Success',
+        data: response,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Get('bookById/:bookId')
+  async getBookById(
+    @Param('bookId', ParseIntPipe) bookId: number,
+    @Res() res: Response,
+  ) {
+    try {
+      const response = await this.bookService.getBookById(bookId);
+      return res.status(200).json({
+        message: 'Success',
+        data: response
+      })
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Post('borrow')
+  async borrowBook(@Body() dto: BorrowDto, @Res() res: Response){
+    try {
+      const account: IAccount[] = await this.accountService.findAccountsByOption({email: dto.email});
+      const response: BorrowResponseDto = await this.borrowService.borrowBook(account[0].id, dto.SA);
+      return res.status(201).json({
+        data: response
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Post('hash')
+  async hashSA(@Body() dto: HashDto, @Res() res: Response){
+    try {
+      const response: HashResponseDto = await this.hashSAService.createSA(dto);
+      return res.status(201).json({
+        data: response
+      })
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+}

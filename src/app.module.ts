@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { RoleModule } from './role/role.module';
-import { DatabaseModule } from './database/database.module';
-import { UserModule } from './user/user.module';
-import { AuthModule } from './auth/auth.module';
-import { BookModule } from './book/book.module';
-import { CategoryModule } from './category/category.module';
-import { AuthorModule } from './author/author.module';
+import { RoleModule } from './api/role/role.module';
+import { DatabaseModule } from './api/database/database.module';
+import { UserModule } from './api/user/user.module';
+import { AuthModule } from './api/auth/auth.module';
+import { BookModule } from './api/book/book.module';
+import { CategoryModule } from './api/category/category.module';
+import { AuthorModule } from './api/author/author.module';
 
 @Module({
   imports: [
