@@ -17,6 +17,7 @@ import {
 } from 'src/api/auth/dtos/registerDtos';
 import { AuthDto, AuthResponseDto } from 'src/api/auth/dtos/authDtos';
 import { Repositoties } from 'src/utils/constants';
+import { User } from '../user/entities';
 
 @Injectable()
 export class AuthService {
@@ -64,6 +65,15 @@ export class AuthService {
     return account;
   }
 
+  public async getProfile(accountId: number){
+    const account = await this.accountRepository.createQueryBuilder('account')
+    .select(['account.email','account.id','account.roleId','account.user','account.walletAddress'])
+    .where('account.id = :accountId',{accountId: accountId})
+    .leftJoinAndSelect("account.user","user")
+    .getOne();
+
+    return account;
+  }
   public async refreshToken(
     email: string,
     refreshToken: string,

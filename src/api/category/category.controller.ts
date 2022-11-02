@@ -23,7 +23,7 @@ import {
   UpdateCategoryResponseDto,
 } from 'src/api/category/dtos/updateCategoryDtos';
 import { CategoryService } from './category.service';
-import { ICategory, ICategoryName } from './interfaces';
+import { ICategory } from './interfaces';
 
 @ApiTags('Category')
 @Controller('category')

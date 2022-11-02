@@ -15,6 +15,7 @@ import { Repository } from 'typeorm';
 import { Book } from '../entities';
 import { IBook } from '../interfaces';
 import { AuthorService } from 'src/api/author/author.service';
+import { GetBooksFilterDto } from 'src/api/book/dtos/getBooksDtos';
 
 @Injectable()
 export class BookService {
@@ -79,13 +80,20 @@ export class BookService {
       };
   }
 
-  public async getBooks() {
+  public async getBooks( filter: GetBooksFilterDto) {
+    const response = await this.bookRepository
+      .createQueryBuilder('book')
+      .skip((filter.page-1)*8)
+      .take(filter.limit)
+      .getMany();
+    return response;
+  }
+  public async getBooksLength() {
     const response = await this.bookRepository
       .createQueryBuilder('book')
       .getMany();
     return response;
   }
-
   public async getBooksByName(bookName: string): Promise<IBook[]> {
       const response: IBook[] = await this.bookRepository
         .createQueryBuilder('book')

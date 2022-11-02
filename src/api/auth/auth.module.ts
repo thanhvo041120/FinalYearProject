@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { DatabaseModule } from 'src/api/database/database.module';
 import { UserModule } from 'src/api/user/user.module';
@@ -10,9 +10,21 @@ import { JwtRefreshTokenStrategy, JwtAccessTokenStrategy } from './strategies';
 import { JwtGuard } from './guards';
 import { RoleModule } from 'src/api/role/role.module';
 @Module({
-    imports: [DatabaseModule, UserModule,JwtModule.register({}), PassportModule, RoleModule],
-    controllers: [AuthController],
-    providers: [AuthService, ...authProviders, JwtAccessTokenStrategy, JwtRefreshTokenStrategy, JwtGuard],
-    exports: [AuthService]
+  imports: [
+    DatabaseModule,
+    forwardRef(() => UserModule),
+    JwtModule.register({}),
+    PassportModule,
+    RoleModule,
+  ],
+  controllers: [AuthController],
+  providers: [
+    AuthService,
+    ...authProviders,
+    JwtAccessTokenStrategy,
+    JwtRefreshTokenStrategy,
+    JwtGuard,
+  ],
+  exports: [AuthService],
 })
 export class AuthModule {}

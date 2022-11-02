@@ -22,6 +22,14 @@ export class Account extends CoreEntity {
     })
     password: string
 
+    @Column({
+        type:'varchar',
+        length: 255,
+        unique: true,
+        nullable: true
+    })
+    walletAddress: string
+
     @Column({type: 'int', nullable: false})
     roleId: number;
     @ManyToOne(()=>Role, (role)=>role.accounts, {onDelete: 'CASCADE'})

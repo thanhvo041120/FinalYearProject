@@ -66,6 +66,7 @@ export class AuthController {
         tokens: response.tokens,
         accountId: account[0].id,
         email: account[0].email,
+        roleId: account[0]['roleId'],
       });
     } catch (error) {
       return new InternalServerErrorException('Internal Server Error');
