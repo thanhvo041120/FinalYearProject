@@ -17,13 +17,18 @@ import {
   UpdateUserDto,
   UpdateUserResponseDto,
 } from 'src/api/user/dtos/updateUserDtos';
+import { AuthService } from '../auth/auth.service';
+import { IAccount } from '../auth/interfaces';
 import { IUser } from './interfaces/user.interface';
 import { UserService } from './user.service';
 
 @ApiTags('User')
 @Controller('users')
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private authService: AuthService,
+  ) {}
 
   //   @UseGuards(JwtGuard)
   @Get('findAll')
@@ -38,6 +43,20 @@ export class UserController {
     }
   }
 
+  @Get('profile/:accountId')
+  async getUserProfile(
+    @Res() res: Response,
+    @Param('accountId', ParseIntPipe) accountId: number,
+  ) {
+    try {
+      const response = await this.authService.getProfile(accountId);
+      return res.status(200).json({
+        data: response,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
   //   @UseGuards(JwtGuard)
   @Get('search/name/:username')
   async getUsersByName(

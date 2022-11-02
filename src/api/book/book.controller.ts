@@ -30,6 +30,7 @@ import { BorrowBookService } from './services/borrow_book.service';
 import { IAccount } from '../auth/interfaces';
 import { HashDto, HashResponseDto } from './dtos/hashSADtos';
 import { BookToSaService } from './services/hash_book_SA.service';
+import { GetBooksFilterDto } from './dtos/getBooksDtos';
 
 @ApiTags('Book')
 @Controller('book')
@@ -93,9 +94,9 @@ export class BookController {
   }
 
   @Get('list')
-  async getBooks(@Res() res: Response) {
+  async getBooks(@Res() res: Response, @Query() filter: GetBooksFilterDto) {
     try {
-      const response = await this.bookService.getBooks();
+      const response = await this.bookService.getBooks(filter);
       return res.status(200).json({
         data: response,
       });
@@ -103,7 +104,17 @@ export class BookController {
       throw new InternalServerErrorException(error.message);
     }
   }
-
+  @Get('count')
+  async getBooksLength(@Res() res: Response) {
+    try {
+      const response = await this.bookService.getBooksLength();
+      return res.status(200).json({
+        data: response.length,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
   @Get('booksByName')
   async getBooksByName(
     @Query('bookName') bookName: string,
