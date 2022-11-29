@@ -92,10 +92,11 @@ export class UserController {
     }
   }
 
-  @Patch('update/:userId')
+  @Patch('update/:accountId/:userId')
   async updateUser(
     @Body() dto: UpdateUserDto,
     @Param('userId', ParseIntPipe) userId: number,
+    @Param('accountId', ParseIntPipe) accountId: number,
     @Res() res: Response,
   ) {
     try {
@@ -104,9 +105,17 @@ export class UserController {
       );
       if (findExistUser && findExistUser.id !== userId)
         return res
-          .status(401)
+          .status(409)
           .json({ message: "User's phonenumber is existed" });
 
+      if(dto.walletAddress){
+        await this.authService.updateAccount(
+          { walletAddress: dto.walletAddress },
+          accountId,
+        );
+        delete(dto.walletAddress);
+        delete(dto.email)
+      }
       const response: UpdateUserResponseDto = await this.userService.updateUser(
         dto,
         userId,

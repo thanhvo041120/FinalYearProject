@@ -11,6 +11,7 @@ import {
   Patch,
   Post,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -22,6 +23,7 @@ import {
   UpdateCategoryDto,
   UpdateCategoryResponseDto,
 } from 'src/api/category/dtos/updateCategoryDtos';
+import { JwtGuard } from '../auth/guards';
 import { CategoryService } from './category.service';
 import { ICategory } from './interfaces';
 
@@ -30,6 +32,8 @@ import { ICategory } from './interfaces';
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
+  
+  @UseGuards(JwtGuard)
   @Post('create')
   async createCategory(
     @Body() createCategoryDto: CreateCategoryDto,
@@ -51,6 +55,8 @@ export class CategoryController {
     }
   }
 
+  
+  @UseGuards(JwtGuard)
   @Patch('update/:categoryId')
   async updateCategory(
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -76,6 +82,8 @@ export class CategoryController {
     }
   }
 
+  
+  @UseGuards(JwtGuard)
   @Delete('delete/:categoryId')
   async deleteCategory(
     @Param('categoryId', ParseIntPipe) categoryId: number,
@@ -91,6 +99,8 @@ export class CategoryController {
     }
   }
 
+  
+  @UseGuards(JwtGuard)
   @Get('categories')
   async getCategories(@Res() res: Response) {
     try {
@@ -103,6 +113,7 @@ export class CategoryController {
     }
   }
 
+  @UseGuards(JwtGuard)
   @Get('names')
   async getCategoryNames(@Res() res: Response) {
     try {
@@ -116,6 +127,7 @@ export class CategoryController {
     }
   }
 
+  @UseGuards(JwtGuard)
   @Get('categoryByName/:categoryName')
   async getCategoryByName(
     @Param('categoryName') categoryName: string,
@@ -124,6 +136,24 @@ export class CategoryController {
     try {
       const response = await this.categoryService.getCategoryByOption({
         name: categoryName,
+      });
+      return res.status(200).json({
+        data: response,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('categoryById/:categoryId')
+  async getCategoryById(
+    @Param('categoryId', ParseIntPipe) categoryId: number,
+    @Res() res: Response,
+  ) {
+    try {
+      const response = await this.categoryService.getCategoryByOption({
+        id: categoryId,
       });
       return res.status(200).json({
         data: response,

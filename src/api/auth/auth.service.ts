@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Inject,
-  Injectable,
-} from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { Account } from './entities';
@@ -65,19 +61,26 @@ export class AuthService {
     return account;
   }
 
-  public async getProfile(accountId: number){
-    const account = await this.accountRepository.createQueryBuilder('account')
-    .select(['account.email','account.id','account.roleId','account.user','account.walletAddress'])
-    .where('account.id = :accountId',{accountId: accountId})
-    .leftJoinAndSelect("account.user","user")
-    .getOne();
+  public async getProfile(accountId: number) {
+    const account = await this.accountRepository
+      .createQueryBuilder('account')
+      .select([
+        'account.email',
+        'account.id',
+        'account.roleId',
+        'account.user',
+        'account.walletAddress',
+      ])
+      .where('account.id = :accountId', { accountId: accountId })
+      .leftJoinAndSelect('account.user', 'user')
+      .getOne();
 
     return account;
   }
   public async refreshToken(
     email: string,
     refreshToken: string,
-  ): Promise<IToken | object> {
+  ) {
     try {
       const account: object = await this.accountRepository
         .createQueryBuilder('Account')
@@ -93,12 +96,20 @@ export class AuthService {
         })
         .getOne();
 
-      if (!(refreshToken === existedToken.token)) {
-        return new ForbiddenException('Access Denied');
+      if (!existedToken.token.includes(refreshToken)) {
+        return {
+          status: 403,
+          message: 'Invalid Token'
+        };
       }
-      const response: IToken = await this.signToken(account['id'], email);
-      await this.updateRFToken(account['id'], response.refresh_token);
-      return response;
+      if (existedToken.token.includes(refreshToken)) {
+        const response: IToken = await this.signToken(account['id'], email);
+        await this.updateRFToken(account['id'], response.refresh_token);
+        return {
+          status: 200,
+          message: response
+        };
+      }
     } catch (error) {
       return error.message;
     }
@@ -116,7 +127,7 @@ export class AuthService {
     const secret = this.config.get('JWT_SECRET');
     const refreshSecret = this.config.get('JWT_RF_SECRET');
     const token = await this.jwt.signAsync(payload, {
-      expiresIn: '60s',
+      expiresIn: '30s',
       secret: secret,
     });
 
@@ -193,5 +204,15 @@ export class AuthService {
       enteredPassword,
     );
     return isCorrectPassword;
+  }
+
+  public async updateAccount(option: object, accountId: number) {
+    const response = await this.accountRepository
+      .createQueryBuilder('Account')
+      .update(Account)
+      .set(option)
+      .where('id = :accountId', { accountId: accountId })
+      .execute();
+    return response;
   }
 }

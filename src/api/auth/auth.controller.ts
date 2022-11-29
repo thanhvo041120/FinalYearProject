@@ -11,10 +11,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { RoleService } from 'src/api/role/role.service';
 import { UserService } from 'src/api/user/user.service';
-import {
-  AuthDto,
-  AuthResponseDto,
-} from 'src/api/auth/dtos/authDtos';
+import { AuthDto, AuthResponseDto } from 'src/api/auth/dtos/authDtos';
 import { RegisterDto } from 'src/api/auth/dtos/registerDtos';
 import { AuthService } from './auth.service';
 import { JwtGuard, JwtRefreshGuard } from './guards';
@@ -28,12 +25,24 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() dto: RegisterDto, @Res() res: Response) {
+    console.log(
+      '🚀 ~ file: auth.controller.ts ~ line 31 ~ AuthController ~ register ~ dto',
+      dto,
+    );
     try {
-      const userDetail = await this.userService.findUserByPhoneNumber(dto.phonenumber);
-      if(userDetail) return res.status(409).json({message: "User's phonenumber is existed"});
-      
-      const account = await this.authService.findAccountsByOption({email: dto.email});
-      if(account.length > 0)  return res.status(409).json({message: "User's email is existed"});
+      const userDetail = await this.userService.findUserByPhoneNumber(
+        dto.phonenumber,
+      );
+      if (userDetail)
+        return res
+          .status(409)
+          .json({ message: "User's phonenumber is existed" });
+
+      const account = await this.authService.findAccountsByOption({
+        email: dto.email,
+      });
+      if (account.length > 0)
+        return res.status(409).json({ message: "User's email is existed" });
       const response = await this.authService.register(dto);
       return res.status(201).json({
         data: response,
@@ -75,20 +84,28 @@ export class AuthController {
 
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
-  async refreshToken(@Req() req: Request) {
+  async refreshToken(@Req() req: Request, @Res() res: Response) {
     const user = req.user;
-    return await this.authService.refreshToken(
+    const response = await this.authService.refreshToken(
       user['email'],
       user['refreshToken'],
     );
+
+    if(response.status === 403){
+      return res.status(401).json({
+        data: response.message,
+      });
+    }
+    return res.status(201).json({
+      data: response.message,
+    });
   }
 
-  @UseGuards(JwtGuard)
+  @UseGuards(JwtRefreshGuard)
   @Post('logout')
-  async logout(@Req() req: Request){
+  async logout(@Req() req: Request) {
     try {
       const account = req.user;
-      console.log("🚀 ~ file: auth.controller.ts ~ line 89 ~ AuthController ~ logout ~ account", account)
       await this.authService.logout(account['refreshToken']);
     } catch (error) {
       throw new InternalServerErrorException(error.message);

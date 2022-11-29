@@ -11,6 +11,7 @@ import {
   Post,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -31,6 +32,7 @@ import { IAccount } from '../auth/interfaces';
 import { HashDto, HashResponseDto } from './dtos/hashSADtos';
 import { BookToSaService } from './services/hash_book_SA.service';
 import { GetBooksFilterDto } from './dtos/getBooksDtos';
+import { JwtGuard } from '../auth/guards';
 
 @ApiTags('Book')
 @Controller('book')
@@ -39,8 +41,10 @@ export class BookController {
     private readonly bookService: BookService,
     private readonly accountService: AuthService,
     private readonly borrowService: BorrowBookService,
-    private readonly hashSAService: BookToSaService) {}
+    private readonly hashSAService: BookToSaService,
+  ) {}
 
+  @UseGuards(JwtGuard)
   @Post('create')
   async createBook(@Body() createDto: CreateBookDto, @Res() res: Response) {
     try {
@@ -55,6 +59,7 @@ export class BookController {
     }
   }
 
+  @UseGuards(JwtGuard)
   @Patch('update/:bookId')
   async updateBook(
     @Body() updateDto: UpdateBookDto,
@@ -78,6 +83,7 @@ export class BookController {
     }
   }
 
+  @UseGuards(JwtGuard)
   @Delete('delete/:bookId')
   async deleteBook(
     @Param('bookId', ParseIntPipe) bookId: number,
@@ -93,21 +99,32 @@ export class BookController {
     }
   }
 
+  @UseGuards(JwtGuard)
   @Get('list')
   async getBooks(@Res() res: Response, @Query() filter: GetBooksFilterDto) {
+    console.log("🚀 ~ file: book.controller.ts ~ line 105 ~ BookController ~ getBooks ~ filter", filter)
     try {
-      const response = await this.bookService.getBooks(filter);
-      return res.status(200).json({
-        data: response,
-      });
+      if (Object.keys(filter).length > 0) {
+        const response = await this.bookService.getBooks(filter);
+        return res.status(200).json({
+          data: response,
+        });
+      } else {
+        const response = await this.bookService.getAllBooks();
+        return res.status(200).json({
+          data: response,
+        });
+      }
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  @UseGuards(JwtGuard)
   @Get('count')
   async getBooksLength(@Res() res: Response) {
     try {
-      const response = await this.bookService.getBooksLength();
+      const response = await this.bookService.getBooksLengthByOption({});
       return res.status(200).json({
         data: response.length,
       });
@@ -115,6 +132,26 @@ export class BookController {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  @UseGuards(JwtGuard)
+  @Get('length/:categoryId')
+  async getBooksLengthByCategory(
+    @Param('categoryId', ParseIntPipe) categoryId: number,
+    @Res() res: Response,
+  ) {
+    try {
+      const response = await this.bookService.getBooksLengthByOption({
+        categoryId: categoryId,
+      });
+      return res.status(200).json({
+        data: response.length,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @UseGuards(JwtGuard)
   @Get('booksByName')
   async getBooksByName(
     @Query('bookName') bookName: string,
@@ -131,6 +168,7 @@ export class BookController {
     }
   }
 
+  @UseGuards(JwtGuard)
   @Get('bookById/:bookId')
   async getBookById(
     @Param('bookId', ParseIntPipe) bookId: number,
@@ -140,33 +178,60 @@ export class BookController {
       const response = await this.bookService.getBookById(bookId);
       return res.status(200).json({
         message: 'Success',
-        data: response
-      })
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
-    }
-  }
-
-  @Post('borrow')
-  async borrowBook(@Body() dto: BorrowDto, @Res() res: Response){
-    try {
-      const account: IAccount[] = await this.accountService.findAccountsByOption({email: dto.email});
-      const response: BorrowResponseDto = await this.borrowService.borrowBook(account[0].id, dto.SA);
-      return res.status(201).json({
-        data: response
+        data: response,
       });
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
   }
 
+  @UseGuards(JwtGuard)
+  @Get('bookByCategory/:categoryId')
+  async getBookByCategory(
+    @Param('categoryId', ParseIntPipe) categoryId: number,
+    @Query() filter: GetBooksFilterDto,
+    @Res() res: Response,
+  ) {
+    try {
+      const response = await this.bookService.getBooksByCategory(
+        categoryId,
+        filter,
+      );
+      return res.status(200).json({
+        message: 'Success',
+        data: response,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('borrow')
+  async borrowBook(@Body() dto: BorrowDto, @Res() res: Response) {
+    try {
+      const account: IAccount[] =
+        await this.accountService.findAccountsByOption({ email: dto.email });
+      const response: BorrowResponseDto = await this.borrowService.borrowBook(
+        account[0].id,
+        dto.SA,
+      );
+      return res.status(201).json({
+        data: response,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @UseGuards(JwtGuard)
   @Post('hash')
-  async hashSA(@Body() dto: HashDto, @Res() res: Response){
+  async hashSA(@Body() dto: HashDto, @Res() res: Response) {
     try {
       const response: HashResponseDto = await this.hashSAService.createSA(dto);
       return res.status(201).json({
-        data: response
-      })
+        data: response,
+      });
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }

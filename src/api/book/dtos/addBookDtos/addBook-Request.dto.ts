@@ -10,6 +10,10 @@ export class CreateBookDto{
     
     description ?: string;
 
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    image: string
     
     @ApiProperty()
     @IsNumber()

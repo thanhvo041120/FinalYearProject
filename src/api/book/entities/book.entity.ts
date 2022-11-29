@@ -15,7 +15,6 @@ export class Book extends CoreEntity{
 
     @Column({
         type: 'varchar',
-        length: 255,
         nullable: true
     })
     description: string;
@@ -25,6 +24,12 @@ export class Book extends CoreEntity{
         nullable: false
     })
     total: number;
+
+    @Column({
+        type: 'varchar',
+        nullable: false
+    })
+    image: string;
 
     @Column({
         type: 'int',

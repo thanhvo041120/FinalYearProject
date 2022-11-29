@@ -50,7 +50,7 @@ export class UserService {
   }
 
   public async updateUser(
-    dto: UpdateUserDto,
+    dto: object,
     userId: number,
   ): Promise<UpdateUserResponseDto> {
     const response = await this.userRepository

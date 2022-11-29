@@ -1,7 +1,4 @@
-import {
-  Inject,
-  Injectable,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Repositoties } from 'src/utils/constants';
 import {
   CreateBookDto,
@@ -22,7 +19,7 @@ export class BookService {
   constructor(
     @Inject(Repositoties.BOOK)
     private readonly bookRepository: Repository<Book>,
-    private readonly authorService: AuthorService
+    private readonly authorService: AuthorService,
   ) {}
 
   public async createBook(dto: CreateBookDto): Promise<CreateBookResponseDto> {
@@ -31,7 +28,8 @@ export class BookService {
     newBook.total = dto.total;
     newBook.authorId = dto.authorId;
     newBook.categoryId = dto.categoryId;
-    if (dto.description === undefined) {
+    newBook.image = dto.image;
+    if (dto.description === '') {
       newBook.description = null;
     } else {
       newBook.description = dto.description;
@@ -67,47 +65,67 @@ export class BookService {
   }
 
   public async deleteBook(bookId: number): Promise<object> {
-      const response = await this.bookRepository
-        .createQueryBuilder('book')
-        .delete()
-        .from(Book)
-        .where('book.id = :bookId', { bookId: bookId })
-        .execute();
-
-      return {
-        message: 'success',
-        data: response.affected,
-      };
-  }
-
-  public async getBooks( filter: GetBooksFilterDto) {
     const response = await this.bookRepository
       .createQueryBuilder('book')
-      .skip((filter.page-1)*8)
+      .delete()
+      .from(Book)
+      .where('book.id = :bookId', { bookId: bookId })
+      .execute();
+
+    return {
+      message: 'success',
+      data: response.affected,
+    };
+  }
+
+  public async getBooks(filter: GetBooksFilterDto) {
+    const response = await this.bookRepository
+      .createQueryBuilder('book')
+      .skip((filter.page - 1) * filter.limit)
       .take(filter.limit)
       .getMany();
     return response;
   }
-  public async getBooksLength() {
+
+  public async getAllBooks() {
     const response = await this.bookRepository
       .createQueryBuilder('book')
       .getMany();
+
+    return response;
+  }
+
+  public async getBooksLengthByOption(option: object) {
+    const response = await this.bookRepository.findBy(option);
+    return response;
+  }
+  public async getBooksByCategory(
+    categoryId: number,
+    filter: GetBooksFilterDto,
+  ): Promise<IBook[]> {
+    const response: IBook[] = await this.bookRepository
+      .createQueryBuilder('book')
+      .where('book.categoryId = :categoryId', { categoryId: categoryId })
+      .skip((filter.page - 1) * filter.limit)
+      .take(filter.limit)
+      .getMany();
+
     return response;
   }
   public async getBooksByName(bookName: string): Promise<IBook[]> {
-      const response: IBook[] = await this.bookRepository
-        .createQueryBuilder('book')
-        .where("book.name like '%' || :bookName || '%'", { bookName: bookName })
-        .getRawMany();
+    const response: IBook[] = await this.bookRepository
+      .createQueryBuilder('book')
+      .where("book.name like '%' || :bookName || '%'", { bookName: bookName })
+      .getRawMany();
 
-      return response;
+    return response;
   }
 
   public async getBookById(bookId: number): Promise<IBook> {
     const response: IBook = await this.bookRepository
       .createQueryBuilder('book')
       .where('book.id = :bookId', { bookId: bookId })
-      .getRawOne();
+      .getOne();
     return response;
-  }  
+  }
 }

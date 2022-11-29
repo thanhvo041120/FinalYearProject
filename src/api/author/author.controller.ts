@@ -10,6 +10,7 @@ import {
   Post,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -20,12 +21,14 @@ import {
   UpdateAuthorResponseDto,
 } from './dtos/updateAuthorDtos';
 import { IAuthor } from './interfaces';
+import { JwtGuard } from '../auth/guards/jwt.guard';
 
 @Controller('author')
 @ApiTags('Author')
 export class AuthorController {
   constructor(private authorService: AuthorService) {}
 
+  @UseGuards(JwtGuard)
   @Post('/create')
   async createAuthor(@Body() dto: CreateAuthorDto, @Res() res: Response) {
     try {
@@ -39,6 +42,7 @@ export class AuthorController {
     }
   }
 
+  @UseGuards(JwtGuard)
   @Patch('/update/:authorId')
   async updateAuthor(
     @Body() dto: UpdateAuthorDto,
@@ -56,6 +60,7 @@ export class AuthorController {
     }
   }
 
+  @UseGuards(JwtGuard)
   @Delete('delete/:authorId')
   async deleteAuthor(
     @Param('authorId', ParseIntPipe) authorId: number,
@@ -72,6 +77,8 @@ export class AuthorController {
       throw new InternalServerErrorException(error.message);
     }
   }
+  
+  @UseGuards(JwtGuard)
   @Get('authors')
   async getAuthors(@Res() res: Response) {
     try {
@@ -84,6 +91,7 @@ export class AuthorController {
     }
   }
 
+  @UseGuards(JwtGuard)
   @Get('getAuthor/:authorId')
   async findAuthorById(
     @Param('authorId', ParseIntPipe) authorId: number,
@@ -101,6 +109,7 @@ export class AuthorController {
     }
   }
 
+  @UseGuards(JwtGuard)
   @Get('getAuthors')
   async findAuthorByName(
     @Query('authorName') authorName: string,

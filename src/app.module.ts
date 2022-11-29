@@ -7,6 +7,7 @@ import { AuthModule } from './api/auth/auth.module';
 import { BookModule } from './api/book/book.module';
 import { CategoryModule } from './api/category/category.module';
 import { AuthorModule } from './api/author/author.module';
+import { MailModule } from './api/mail/mail.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AuthorModule } from './api/author/author.module';
     BookModule,
     CategoryModule,
     AuthorModule,
+    MailModule,
   ],
 })
 export class AppModule {}
