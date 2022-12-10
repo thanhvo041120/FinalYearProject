@@ -26,7 +26,7 @@ export class Account extends CoreEntity {
         type:'varchar',
         length: 255,
         unique: true,
-        nullable: true
+        nullable: false
     })
     walletAddress: string
 

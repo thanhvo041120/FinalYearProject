@@ -1,11 +1,20 @@
-import { IsInt, IsNotEmpty, IsString } from "class-validator";
+import { IsArray, IsInt, IsNotEmpty, IsNumber, IsString  } from "class-validator";
 
 export class HashDto{
-    @IsString()
+    @IsArray()
     @IsNotEmpty()
-    address: string;
+    address: Array<string>;
 
     @IsNotEmpty()
     @IsInt()
     bookId: number;
+
+    @IsNotEmpty()
+    @IsString()
+    bookName: string;
+
+    @IsNumber()
+    @IsNotEmpty()
+    expLength: number;
+
 }

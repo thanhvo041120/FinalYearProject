@@ -16,4 +16,16 @@ export class Borrow extends CoreEntity{
     @ManyToOne(()=>BookToSA)
     @JoinColumn({name: 'bookToSAString'})
     bookToSA: BookToSA;
+
+    @Column({
+        type: 'varchar',
+        nullable: false
+    })
+    bookName: string
+    
+    @Column({
+        type: 'date',
+        nullable: false
+    })
+    expDate: Date;
 }

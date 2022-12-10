@@ -1,4 +1,4 @@
-export class HashResponseDto{
-    message: string;
-    affectedRow: number
+export class HashResponseDto {
+  message: string;
+  affectedRow: Array<string>;
 }

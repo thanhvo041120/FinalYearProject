@@ -38,7 +38,7 @@ export class CategoryService {
       .createQueryBuilder()
       .insert()
       .into(Category)
-      .values([category])
+      .values(category)
       .execute();
     return {
       message: 'Success',
@@ -83,6 +83,7 @@ export class CategoryService {
   public async getCategories(): Promise<ICategory[]> {
     const response: ICategory[] = await this.categoryRepository
       .createQueryBuilder('category')
+      .leftJoinAndSelect('category.book','book')
       .getMany();
     return response;
   }
@@ -99,10 +100,11 @@ export class CategoryService {
     return namesArray;
   }
 
-  public async getCategoryByOption(option: object): Promise<ICategory[]>{
-    const response: ICategory[] = await this.categoryRepository.createQueryBuilder()
-    .where(option)
-    .getMany();
+  public async getCategoryByOption(option: object): Promise<ICategory[]> {
+    const response: ICategory[] = await this.categoryRepository
+      .createQueryBuilder()
+      .where(option)
+      .getMany();
 
     return response;
   }

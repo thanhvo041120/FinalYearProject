@@ -9,11 +9,9 @@ import { RefreshToken } from './entities';
 import { IAccount, IToken } from './interfaces';
 import {
   RegisterDto,
-  RegisterResponseDto,
 } from 'src/api/auth/dtos/registerDtos';
 import { AuthDto, AuthResponseDto } from 'src/api/auth/dtos/authDtos';
 import { Repositoties } from 'src/utils/constants';
-import { User } from '../user/entities';
 
 @Injectable()
 export class AuthService {
@@ -27,33 +25,54 @@ export class AuthService {
     private jwt: JwtService,
   ) {}
 
-  public async register(dto: RegisterDto): Promise<RegisterResponseDto> {
+  public async register(dto: RegisterDto) {
     const hashedPassword = await argon.hash(dto.password);
     const user = new Account();
     user.email = dto.email;
     user.password = hashedPassword;
+    user.roleId = dto.roleId;
+    user.walletAddress = dto.walletAddress.toLowerCase();
     delete dto.email;
     delete dto.password;
+    delete dto.walletAddress;
+    delete dto.roleId;
+
     const addUserData = await this.userService.createUser(dto);
     user.userId = addUserData.affectedRow;
-    user.roleId = dto.roleId;
     const addedUser = await this.accountRepository.save(user);
     delete addedUser.password;
     return addedUser;
   }
 
-  public async login(dto: AuthDto, account: object): Promise<AuthResponseDto> {
+  public async login(
+    dto: AuthDto,
+    accountPassword: string,
+    accountId: number,
+  ): Promise<AuthResponseDto> {
     const isCorrectPassword: boolean = await this.verifyPassword(
       dto.password,
-      account['password'],
+      accountPassword,
     );
     if (!isCorrectPassword) return { status: 401 };
-    const response: IToken = await this.signToken(account['id'], dto.email);
-    await this.setRefreshToken(account['id'], response.refresh_token);
+    const response: IToken = await this.signToken(accountId, dto.email);
+    await this.setRefreshToken(accountId, response.refresh_token);
     return {
       status: 201,
       tokens: response,
     };
+  }
+
+  public async changePassword(newPassword: string, accountId: number) {
+    const hashedPassword = await argon.hash(newPassword);
+    const response = await this.accountRepository
+      .createQueryBuilder('account')
+      .update(Account)
+      .set({
+        password: hashedPassword,
+      })
+      .where('id = :accountId', { accountId: accountId })
+      .execute();
+    return response;
   }
 
   public async findAccountsByOption(option: Object): Promise<IAccount[]> {
@@ -61,7 +80,7 @@ export class AuthService {
     return account;
   }
 
-  public async getProfile(accountId: number) {
+  public async getProfile(alias: string, options: object) {
     const account = await this.accountRepository
       .createQueryBuilder('account')
       .select([
@@ -71,16 +90,13 @@ export class AuthService {
         'account.user',
         'account.walletAddress',
       ])
-      .where('account.id = :accountId', { accountId: accountId })
+      .where(alias, options)
       .leftJoinAndSelect('account.user', 'user')
       .getOne();
 
     return account;
   }
-  public async refreshToken(
-    email: string,
-    refreshToken: string,
-  ) {
+  public async refreshToken(email: string, refreshToken: string) {
     try {
       const account: object = await this.accountRepository
         .createQueryBuilder('Account')
@@ -99,7 +115,7 @@ export class AuthService {
       if (!existedToken.token.includes(refreshToken)) {
         return {
           status: 403,
-          message: 'Invalid Token'
+          message: 'Invalid Token',
         };
       }
       if (existedToken.token.includes(refreshToken)) {
@@ -107,7 +123,7 @@ export class AuthService {
         await this.updateRFToken(account['id'], response.refresh_token);
         return {
           status: 200,
-          message: response
+          message: response,
         };
       }
     } catch (error) {
@@ -127,12 +143,12 @@ export class AuthService {
     const secret = this.config.get('JWT_SECRET');
     const refreshSecret = this.config.get('JWT_RF_SECRET');
     const token = await this.jwt.signAsync(payload, {
-      expiresIn: '30s',
+      expiresIn: '15m',
       secret: secret,
     });
 
     const refreshToken = await this.jwt.signAsync(payload, {
-      expiresIn: '12d',
+      expiresIn: '30d',
       secret: refreshSecret,
     });
 
@@ -195,7 +211,7 @@ export class AuthService {
       .where('account = :accountId', { accountId: accountId })
       .execute();
   }
-  private async verifyPassword(
+  public async verifyPassword(
     enteredPassword,
     storedPassword,
   ): Promise<boolean> {

@@ -14,7 +14,6 @@ export class Category extends CoreEntity {
     
     @Column({
         type: 'varchar',
-        length: 255,
         nullable: true
     })
     description: string;

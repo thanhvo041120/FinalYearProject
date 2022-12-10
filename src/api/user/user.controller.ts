@@ -18,7 +18,6 @@ import {
   UpdateUserResponseDto,
 } from 'src/api/user/dtos/updateUserDtos';
 import { AuthService } from '../auth/auth.service';
-import { IAccount } from '../auth/interfaces';
 import { IUser } from './interfaces/user.interface';
 import { UserService } from './user.service';
 
@@ -30,7 +29,7 @@ export class UserController {
     private authService: AuthService,
   ) {}
 
-  //   @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard)
   @Get('findAll')
   async getUsers(@Res() res: Response) {
     try {
@@ -43,13 +42,17 @@ export class UserController {
     }
   }
 
+  @UseGuards(JwtGuard)
   @Get('profile/:accountId')
   async getUserProfile(
     @Res() res: Response,
     @Param('accountId', ParseIntPipe) accountId: number,
   ) {
     try {
-      const response = await this.authService.getProfile(accountId);
+      const response = await this.authService.getProfile(
+        'account.id = :accountId',
+        { accountId: accountId },
+      );
       return res.status(200).json({
         data: response,
       });
@@ -57,7 +60,7 @@ export class UserController {
       throw new InternalServerErrorException(error.message);
     }
   }
-  //   @UseGuards(JwtGuard)
+  @UseGuards(JwtGuard)
   @Get('search/name/:username')
   async getUsersByName(
     @Param('username') username: string,
@@ -75,6 +78,7 @@ export class UserController {
     }
   }
 
+  @UseGuards(JwtGuard)
   @Get('search/phonenumber/:phonenumber')
   async getUserByPhoneNumber(
     @Param('phonenumber') phonenumber: string,
@@ -92,6 +96,7 @@ export class UserController {
     }
   }
 
+  @UseGuards(JwtGuard)
   @Patch('update/:accountId/:userId')
   async updateUser(
     @Body() dto: UpdateUserDto,
@@ -108,18 +113,30 @@ export class UserController {
           .status(409)
           .json({ message: "User's phonenumber is existed" });
 
-      if(dto.walletAddress){
-        await this.authService.updateAccount(
-          { walletAddress: dto.walletAddress },
-          accountId,
-        );
-        delete(dto.walletAddress);
-        delete(dto.email)
-      }
+      delete dto.walletAddress;
+      delete dto.email;
+
       const response: UpdateUserResponseDto = await this.userService.updateUser(
         dto,
         userId,
       );
+      return res.status(200).json({
+        message: 'Success',
+        data: response,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @UseGuards(JwtGuard)
+  @Delete('delete/:userId')
+  async deleteUser(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Res() res: Response,
+  ) {
+    try {
+      const response: number = await this.userService.deleteUser(userId);
       return res.status(200).json({
         data: response,
       });
@@ -128,13 +145,17 @@ export class UserController {
     }
   }
 
-  @Delete('delete/:userId')
-  async deleteUser(
-    @Param('userId', ParseIntPipe) userId: number,
+  @UseGuards(JwtGuard)
+  @Get('getUserByWallet/:walletAddress')
+  async getUserByWallet(
+    @Param('walletAddress') walletAddress: string,
     @Res() res: Response,
   ) {
     try {
-      const response: number = await this.userService.deleteUser(userId);
+      const response = await this.authService.getProfile(
+        'account.walletAddress = :walletAddress',
+        { walletAddress: walletAddress.toLowerCase() },
+      );
       return res.status(200).json({
         data: response,
       });

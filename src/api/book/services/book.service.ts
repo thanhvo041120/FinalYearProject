@@ -28,21 +28,22 @@ export class BookService {
     newBook.total = dto.total;
     newBook.authorId = dto.authorId;
     newBook.categoryId = dto.categoryId;
+    newBook.expLength = dto.expLength;
     newBook.image = dto.image;
     if (dto.description === '') {
       newBook.description = null;
     } else {
       newBook.description = dto.description;
     }
-    await this.bookRepository
+    const response = await this.bookRepository
       .createQueryBuilder()
       .insert()
       .into(Book)
       .values(newBook)
       .execute();
-
     return {
       message: 'Success',
+      bookId: response.identifiers[0].id,
     };
   }
 
@@ -79,6 +80,20 @@ export class BookService {
   }
 
   public async getBooks(filter: GetBooksFilterDto) {
+    if (filter.query) {
+      const response = await this.bookRepository
+        .createQueryBuilder('book')
+        .where('LOWER(book.name) like LOWER(:filter)', {
+          filter: `%${filter.query}%`,
+        })
+        .orWhere('LOWER(book.description) like LOWER(:filter)', {
+          filter: `%${filter.query}%`,
+        })
+        .skip((filter.page - 1) * filter.limit)
+        .take(filter.limit)
+        .getMany();
+      return response;
+    }
     const response = await this.bookRepository
       .createQueryBuilder('book')
       .skip((filter.page - 1) * filter.limit)
@@ -87,7 +102,20 @@ export class BookService {
     return response;
   }
 
-  public async getAllBooks() {
+  public async getAllBooks(filter: string) {
+    if (filter.length > 0) {
+      const response = await this.bookRepository
+        .createQueryBuilder('book')
+        .where('LOWER(book.name) like LOWER(:filter)', {
+          filter: `%${filter}%`,
+        })
+        .orWhere('LOWER(book.description) like LOWER(:filter)', {
+          filter: `%${filter}%`,
+        })
+        .getMany();
+
+      return response;
+    }
     const response = await this.bookRepository
       .createQueryBuilder('book')
       .getMany();
@@ -95,14 +123,26 @@ export class BookService {
     return response;
   }
 
-  public async getBooksLengthByOption(option: object) {
-    const response = await this.bookRepository.findBy(option);
-    return response;
-  }
   public async getBooksByCategory(
     categoryId: number,
     filter: GetBooksFilterDto,
   ): Promise<IBook[]> {
+    if (filter.query) {
+      const response: IBook[] = await this.bookRepository
+        .createQueryBuilder('book')
+        .where('book.categoryId = :categoryId', { categoryId: categoryId })
+        .where('LOWER(book.name) like LOWER(:filter)', {
+          filter: `%${filter.query}%`,
+        })
+        .orWhere('LOWER(book.description) like LOWER(:filter)', {
+          filter: `%${filter.query}%`,
+        })
+        .skip((filter.page - 1) * filter.limit)
+        .take(filter.limit)
+        .getMany();
+
+      return response;
+    }
     const response: IBook[] = await this.bookRepository
       .createQueryBuilder('book')
       .where('book.categoryId = :categoryId', { categoryId: categoryId })
@@ -112,6 +152,30 @@ export class BookService {
 
     return response;
   }
+
+  public async getAllBooksByCategoryId(filter: string, categoryId: number) {
+    if (filter.length > 0) {
+      const response = await this.bookRepository
+        .createQueryBuilder('book')
+        .where('book.categoryId = :categoryId', { categoryId: categoryId })
+        .where('LOWER(book.name) like LOWER(:filter)', {
+          filter: `%${filter}%`,
+        })
+        .orWhere('LOWER(book.description) like LOWER(:filter)', {
+          filter: `%${filter}%`,
+        })
+        .getMany();
+
+      return response;
+    }
+    const response = await this.bookRepository
+      .createQueryBuilder('book')
+      .where('book.categoryId = :categoryId', { categoryId: categoryId })
+      .getMany();
+
+    return response;
+  }
+
   public async getBooksByName(bookName: string): Promise<IBook[]> {
     const response: IBook[] = await this.bookRepository
       .createQueryBuilder('book')

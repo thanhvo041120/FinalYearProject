@@ -45,12 +45,15 @@ export class CategoryController {
       if (categories.includes(createCategoryDto.name)) {
         throw new ConflictException();
       }
+
       const response: CreateCategoryResponseDto =
         await this.categoryService.createCategory(createCategoryDto);
+
       return res.status(201).json({
         response,
       });
     } catch (error) {
+      console.log("🚀 ~ file: category.controller.ts:56 ~ CategoryController ~ error", error.message)
       throw new InternalServerErrorException(error.message);
     }
   }

@@ -21,6 +21,11 @@ export class CreateBookDto{
     total: number;
 
     @ApiProperty()
+    @IsNumber()
+    @IsNotEmpty()
+    expLength: number;
+
+    @ApiProperty()
     @IsNotEmpty()
     authorId: number;
 

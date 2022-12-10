@@ -19,7 +19,10 @@ export class MailController {
     ){
         try {
             const response = await this.mailService.sendMail(sendMailDto);
-            return response
+            console.log("🚀 ~ file: mail.controller.ts:22 ~ MailController ~ response", response)
+            return res.status(200).json({
+                data: response
+            })
         } catch (error) {
             throw new InternalServerErrorException(error.message);
         }

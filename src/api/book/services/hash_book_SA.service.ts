@@ -6,7 +6,7 @@ import {
 import { Repositoties } from 'src/utils/constants';
 import { Repository } from 'typeorm';
 import { HashDto, HashResponseDto } from '../dtos/hashSADtos';
-import { BookToSA } from '../entities';
+import { BookToSA, Borrow } from '../entities';
 import { Md5 } from 'ts-md5';
 
 @Injectable()
@@ -17,23 +17,39 @@ export class BookToSaService {
   ) {}
 
   public async createSA(dto: HashDto): Promise<HashResponseDto> {
-    const hashSA: string = this.hash(dto.address);
-    const response = await this.bookToSaRepository
-      .createQueryBuilder()
-      .insert()
-      .into(BookToSA)
-      .values([
-        {
-          address: dto.address,
-          bookId: dto.bookId,
-          hashSA: hashSA,
-        },
-      ])
-      .execute();
+    let response=[];
+    if(dto.address.length > 0){
+      for await (let item of dto.address){
+        const hashSA: string = this.hash(item);
+        const result = await this.bookToSaRepository
+        .createQueryBuilder()
+        .insert()
+        .into(BookToSA)
+        .values([
+          {
+            address: item,
+            bookId: dto.bookId,
+            hashSA: hashSA,
+          },
+        ])
+        .execute();
+        response.push(result.identifiers[0].address);
+      }
+    }  
+    if(dto.address.length === 0){
+      response = [];
+    } 
     return {
       message: 'Success',
-      affectedRow: response.raw,
+      affectedRow: response,
     };
+  }
+
+  public async getDetailByOptions(options: object){
+    const response = await this.bookToSaRepository.createQueryBuilder('hash')
+    .where(options)
+    .getMany();
+    return response;
   }
 
   private hash(address: string): string{

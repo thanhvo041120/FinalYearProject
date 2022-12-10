@@ -34,4 +34,9 @@ export class RegisterDto {
     @ApiProperty()
     @IsNotEmpty()
     roleId: number;
+    
+    @ApiProperty()
+    @IsNotEmpty()
+    @IsString()
+    walletAddress: string;
 }
